@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic; //pentru listă
 
-//1.
+//1. test
 public struct Dimensiune {
         public decimal lungime;
         public decimal latime;
