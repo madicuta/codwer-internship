@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic; //pentru listă
 
-//1. test
+//1.
 public struct Dimensiune {
         public decimal lungime;
         public decimal latime;
@@ -12,44 +12,41 @@ public abstract class Animal {
 	public static int contor = 0;
     public string nume;
     public readonly decimal greutate;
-    public Dimensiune dimensiune;
+    public readonly Dimensiune dimensiune;
 	public readonly decimal viteza;
 	public Mancare[] stomac = new Mancare[10]; 
 	public Animal(){}
-	public Animal(string nume, decimal greutate, decimal viteza, decimal lungime, decimal latime, decimal inaltime)
-	{
+	public Animal(string nume, decimal greutate, decimal viteza, decimal lungime, decimal latime, decimal inaltime)	{
 		contor++;
-		dimensiune = new Dimensiune 
-			{
-				lungime = lungime,
-				inaltime = inaltime,
-				latime = latime			
-			};
-		this.nume=nume;
+		dimensiune = new Dimensiune {
+			lungime = lungime,
+			inaltime = inaltime,
+			latime = latime			
+		};
+		this.nume = nume;
 		this.viteza = viteza;
-		this.greutate=greutate;
+		this.greutate = greutate;
     }
     public virtual void Mananca (Mancare m) {
-		if (m.greutate < this.greutate / 8)
-		{
+		if (m.greutate < this.greutate / 8)	{
 			int i = 0;
 			while(this.stomac[i]!=null)
 				i++;
 			this.stomac[i] = m;
-			Console.WriteLine("mananca "+ m);
+			Console.WriteLine(this.nume+" mananca "+ m+"\n");
 		}
 		else
 			Console.WriteLine("Prea multă mâncare");
 	}
-	public abstract double Energie(); //=> this.stomac[0].energie;
+	public abstract double Energie(); 
 	public virtual void Alearga(decimal distanta) {
 		decimal e = (decimal)this.Energie();
 		if(e==0 || this.viteza==0 ) {
 			Console.WriteLine("Divizare la zero");
 		}	
 		else {
-			decimal timp = distanta * e / this.viteza ;
-			Console.WriteLine(timp.ToString("F4")+" s"); //afișare cu 4 cifre după virgulă
+			decimal timp = distanta / (this.viteza / e);
+			Console.WriteLine($"{this.nume} parcurge {distanta} m în {timp.ToString("F4")} secunde\n"); //4 cifre după virgulă
 		}
 	}
 	public override string ToString() {
@@ -60,11 +57,11 @@ public abstract class Animal {
 }
 
 class Carnivor : Animal {
-	public static int contor = 0;
+	public static int contorCarnivor = 0;
 	public new Mancare[] stomac = new Mancare[10]; 
 	public Carnivor(){}
 	public Carnivor(string nume, decimal greutate, decimal viteza, decimal lungime, decimal latime, decimal inaltime)
-        : base(nume, greutate, viteza, lungime, latime, inaltime) {contor++;}
+        : base(nume, greutate, viteza, lungime, latime, inaltime) {contorCarnivor++;}
     
     public override double Energie() {
     	decimal sumEnergie=0, sumGreutate=0, medGreutate;
@@ -96,12 +93,12 @@ class Carnivor : Animal {
 }
 
 class Erbivor : Animal {
-	public static int contor = 0;
+	public static int contorErbivor = 0;
 	public Erbivor() {}
 	public Erbivor (string nume, decimal greutate, decimal viteza, decimal lungime, decimal latime, decimal inaltime)
         : base(nume, greutate, viteza, lungime, latime, inaltime){
         	stomac = new Mancare[10];	
-        	contor++;
+        	contorErbivor++;
     }
     new Mancare[] stomac;
     public override double Energie() {
@@ -128,28 +125,33 @@ class Erbivor : Animal {
 }
 
 class Omnivor : Animal {
-	public static int contor = 0;
+	public static int contorOmnivor = 0;
 	public Omnivor(){}
 	public Omnivor (string nume, decimal greutate, decimal viteza, decimal lungime, decimal latime, decimal inaltime)
         : base(nume, greutate, viteza, lungime, latime, inaltime){
         	stomac = new Mancare[10];
-        	contor++;
+        	contorOmnivor++;
     }
     new Mancare[] stomac;
     public override double Energie() {
-    	decimal sumEnergie=0, sumGreutate=0, medCoefGreutate, coefGreutate=1;
+    	decimal sumEnergie=0, sumGreutate=0, greutateCarne=0, greutatePlante=0, coefCarne=-1/2m, coefPlante=1/2m, medGreutate;
     	int count=0;
     	foreach(Mancare m in ((Animal)this).stomac)
 			if (m!=null) {
-				if (m is Carne) coefGreutate=-1/2m;
-				if (m is Planta) coefGreutate=1/2m;
-				
+				if (m is Planta) 
+					greutatePlante+=m.greutate;
+				else if (m is Carne) 
+					greutateCarne+=m.greutate;
+				else {
+					Console.WriteLine("Mâncare necunoscută");
+					return 0;	
+				}							
 				sumEnergie+=m.energie;
-				sumGreutate+=m.greutate*coefGreutate;
+				sumGreutate+=m.greutate;
 				count++;
 			}
-    	medCoefGreutate = sumGreutate/count; //Console.WriteLine((double)(0.35m + medCoefGreutate + sumEnergie));
-    	return (double)(0.35m + medCoefGreutate + sumEnergie);
+    	medGreutate = sumGreutate/count; 
+    	return (double)(0.35m + coefCarne*greutateCarne*medGreutate + coefPlante*greutatePlante*medGreutate + sumEnergie);
     } 
     public override void Alearga(decimal distanta){
     	base.Alearga(distanta);
@@ -161,17 +163,16 @@ public abstract class Mancare {
     private decimal _energie;
     public decimal energie {
         get { return _energie; }
-        set
-        {
-            if (value >= 0 && value <= 0.5m)
+        set {
+            if (value >= 0 && value <= 0.05m)
                 _energie = value;
             else
-                Console.WriteLine("Energia trebuie să fie între 0 și 0.5.");
+                Console.WriteLine("Energia trebuie să fie între 0 și 0.05.");
         }
     }
 	public Mancare(decimal greutate, decimal energie){this.greutate=greutate; this.energie=energie;}
 }
-class Carne : Mancare {
+public class Carne : Mancare {
 	public Carne(decimal greutate, decimal energie):base(greutate, energie){}
 }
 public class Planta : Mancare {
@@ -181,7 +182,7 @@ public class Planta : Mancare {
 //2.
 public enum TipAnimal { Lup, Urs, Oaie, Veverita, Pisica, Vaca }
 
-class Program{
+class Program {
 	public static Animal CreeazaAnimal(TipAnimal tip, string nume, decimal greutate, decimal viteza, 
 		decimal lungime, decimal latime, decimal inaltime) {
 		switch(tip) {
@@ -201,12 +202,12 @@ class Program{
 	}
 
 	public static int Main(){
-		Carnivor lup = new Carnivor("Woofey", 25.5m, 11m, 1.2m, 0.6m, 0.8m);
-		Erbivor oaie = new Erbivor("Beh", 30.0m, 9m, 1.0m, 0.5m, 0.7m); 
-		Omnivor urs = new Omnivor("Roar", 300.0m, 14m, 2.0m, 1.0m, 1.5m);  
+		Carnivor lup = new Carnivor("Woofey", 35.5m, 11m, 1.2m, 0.6m, 0.8m);
+		Erbivor oaie = new Erbivor("Beh", 45.0m, 8m, 1.0m, 0.5m, 0.7m); 
+		Omnivor urs = new Omnivor("Roar", 300.0m, 10m, 2.0m, 1.0m, 1.5m);  
 
-		var salata = new Planta(0.2m, 0.3m); 
-		var sunca = new Carne(0.4m, 0.5m);  
+		var salata = new Planta(0.3m, 0.02m); 
+		var sunca = new Carne(0.4m, 0.05m);  
 		
 		lup.Mananca(sunca);	lup.Mananca(sunca);
 		oaie.Mananca(salata); oaie.Mananca(salata); oaie.Mananca(salata);
@@ -214,17 +215,14 @@ class Program{
 		
 		lup.Alearga(200);
 		oaie.Alearga(200);
-		urs.Alearga(200);
-		
+		urs.Alearga(200);		
 
 		Console.WriteLine( oaie.ToString() );
 		Console.WriteLine( (new Carnivor("Woofey", 25.5m, 11m, 1.2m, 0.6m, 0.8m)).ToString() );
 
 		var veverita1 = CreeazaAnimal(TipAnimal.Veverita,"Squirl", 0.3m, 5m, 0.4m, 0.2m, 0.15m);	
 		Console.WriteLine( veverita1.ToString() );
-
 		
-		//2.i
 		List<Animal> lista = new List<Animal>();
 		Random random = new Random();
 		Random randomGenerator = new Random();
@@ -264,9 +262,9 @@ class Program{
 		}
 
 		Console.WriteLine(Animal.contor+" animale instanțiate");
-		Console.WriteLine(Omnivor.contor+" animale mănâncă mâncare");
-		Console.WriteLine(Carnivor.contor+" animale mănâncă carne");
-		Console.WriteLine(Erbivor.contor+" animale mănâncă plante");
+		Console.WriteLine(Omnivor.contorOmnivor+" animale mănâncă mâncare");
+		Console.WriteLine(Carnivor.contorCarnivor+" animale mănâncă carne");
+		Console.WriteLine(Erbivor.contorErbivor+" animale mănâncă plante");
 
 	return 0;
 	}
